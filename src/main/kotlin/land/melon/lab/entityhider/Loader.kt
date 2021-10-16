@@ -3,7 +3,6 @@ package land.melon.lab.entityhider
 import com.google.gson.GsonBuilder
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.Particle
 import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -81,10 +80,6 @@ class Loader : JavaPlugin(), Listener {
         }, 0L, 1L)
     }
 
-//    private fun <T> getDifferencial(originalList:List<T>, newList:List<T>)->Pair<List,List>{
-//        return Pair(ArrayList<T>(),ArrayList<T>())
-//    }
-
     private fun <T> differential(originalSet: Set<T>, newSet: Set<T>): Pair<Set<T>, Set<T>> {
         return Pair(originalSet subtract newSet, newSet subtract originalSet)
     }
@@ -95,8 +90,6 @@ class Loader : JavaPlugin(), Listener {
         maxVisibleDistance: Int,
         transparentBlocks: Set<Material>
     ): Boolean {
-//        if (sourceLocation.world != targetLocation.world)
-//            return false
 
         if (sourceLocation.distance(targetLocation) > maxVisibleDistance)
             return false
@@ -114,12 +107,7 @@ class Loader : JavaPlugin(), Listener {
         )
 
         for (block in blockIterator) {
-            //TODO for debug only
-            // run {
-            //     sourceLocation.world!!.spawnParticle(Particle.VILLAGER_HAPPY, block.location, 1)
-            // }
             if (!block.isEmpty && block.type !in transparentBlocks) {
-                //sourceLocation.world!!.spawnParticle(Particle.SPELL_WITCH, block.location, 1)
                 return false
             }
         }
@@ -148,13 +136,5 @@ class Loader : JavaPlugin(), Listener {
         private val CORNER2 = Vector(-0.5, 0.1, -0.5)
         private val CORNER3 = Vector(0.5, 2.0, -0.5)
         private val CORNER4 = Vector(-0.5, 2.0, 0.5)
-
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val set1 = setOf(1, 2, 3, 4, 5)
-            val set2 = setOf(4, 5, 6, 7, 8)
-
-            println("set1 subtract set2 = ${Loader().differential(set1, set2)}")
-        }
     }
 }
