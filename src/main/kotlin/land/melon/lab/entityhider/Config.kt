@@ -5,18 +5,23 @@ import com.google.gson.annotations.SerializedName
 
 data class Config(
     @Expose
+    @SerializedName("sightTracerThreadsAmount")
+    val sightTracerThreadsAmount: Int = Runtime.getRuntime().availableProcessors(),
+    @Expose
     @SerializedName("maxVDistance")
     val maxViewDistance: Int = 64,
     @Expose
     @SerializedName("frontViewAngle")
-    val frontViewAngle: Double = 90.toDouble(),
+    val frontViewAngle: Double = 90.0,
     @Expose
     @SerializedName("backViewAngle")
-    val backViewAngle: Double = 90.toDouble(),
+    val backViewAngle: Double = 90.0,
     @Expose
     @SerializedName("pitchViewAngle")
-    val pitchViewAngle: Double = 90.toDouble(),
-
+    val pitchViewAngle: Double = 90.0,
+    @Expose
+    @SerializedName("ignorePassableBlocks")
+    val ignorePassableBlocks: Boolean = true,
     @Expose
     @SerializedName("ignoreBlocks")
     val ignoreBlocks: List<String> = mutableListOf(

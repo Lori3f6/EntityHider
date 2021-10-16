@@ -3,6 +3,7 @@ package land.melon.lab.entityhider
 import com.google.gson.GsonBuilder
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -39,9 +40,14 @@ class Loader : JavaPlugin(), Listener {
 
         //setup refresher
         this.server.scheduler.runTaskTimer(this, Runnable {
+            val worldEntityMap =
+                server.worlds.fold(HashMap<String, List<LivingEntity>>()) { map, world ->
+                    map[world.name] = world.livingEntities; map
+                }
+
             for (sourcePlayer in this.server.onlinePlayers) {
                 val visiblePlayers = HashSet<UUID>()
-                for (target in sourcePlayer.world.entities) {
+                for (target in worldEntityMap[sourcePlayer.world.name]!!.iterator()) {
                     //TODO for debug only
                     if (target !is Zombie)
                         continue
@@ -53,17 +59,31 @@ class Loader : JavaPlugin(), Listener {
                     val targetCorner3 = targetPlayerLocation.clone().add(CORNER3)
                     val targetCorner4 = targetPlayerLocation.clone().add(CORNER4)
 
-                    if (isVisible(sourceLocation, targetCorner1, config.maxViewDistance, ignoreBlocks) || isVisible(
+                    if (isVisible(
+                            sourceLocation,
+                            targetCorner1,
+                            config.maxViewDistance,
+                            config.ignorePassableBlocks,
+                            ignoreBlocks
+                        ) || isVisible(
                             sourceLocation,
                             targetCorner2,
                             config.maxViewDistance,
+                            config.ignorePassableBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner3,
                             config.maxViewDistance,
+                            config.ignorePassableBlocks,
                             ignoreBlocks
-                        ) || isVisible(sourceLocation, targetCorner4, config.maxViewDistance, ignoreBlocks)
+                        ) || isVisible(
+                            sourceLocation,
+                            targetCorner4,
+                            config.maxViewDistance,
+                            config.ignorePassableBlocks,
+                            ignoreBlocks
+                        )
                     )
                         visiblePlayers.add(target.uniqueId)
 
@@ -88,7 +108,8 @@ class Loader : JavaPlugin(), Listener {
         sourceLocation: Location,
         targetLocation: Location,
         maxVisibleDistance: Int,
-        transparentBlocks: Set<Material>
+        ignorePassableBlock: Boolean,
+        ignoredBlocks: Set<Material>
     ): Boolean {
 
         if (sourceLocation.distance(targetLocation) > maxVisibleDistance)
@@ -107,9 +128,10 @@ class Loader : JavaPlugin(), Listener {
         )
 
         for (block in blockIterator) {
-            if (!block.isEmpty && block.type !in transparentBlocks) {
+            if (block.isEmpty || (ignorePassableBlock && block.isPassable) || block.type in ignoredBlocks)
+                continue
+            else
                 return false
-            }
         }
         return true
     }
