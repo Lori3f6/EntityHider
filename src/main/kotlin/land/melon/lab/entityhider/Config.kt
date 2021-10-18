@@ -8,7 +8,7 @@ data class Config(
     @SerializedName("sightTracerThreadsAmount")
     val sightTracerThreadsAmount: Int = Runtime.getRuntime().availableProcessors(),
     @Expose
-    @SerializedName("maxVDistance")
+    @SerializedName("maxViewDistance")
     val maxViewDistance: Int = 64,
     @Expose
     @SerializedName("frontViewAngle")
@@ -25,6 +25,12 @@ data class Config(
     @Expose
     @SerializedName("ignoreBlocks")
     val ignoreBlocks: List<String> = mutableListOf(
+        "OAK_LEAVES",
+        "SPRUCE_LEAVES",
+        "BIRTH_LEAVES",
+        "JUNGLE_LEAVES",
+        "ACACIA_LEAVES",
+        "DARK_OAK_LEAVES",
         "GLASS",
         "GLASS_PANE",
         "TINTED_GLASS",

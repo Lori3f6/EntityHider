@@ -1,10 +1,15 @@
 package land.melon.lab.entityhider
 
+import com.comphenix.protocol.PacketType.Play.Server.ENTITY_DESTROY
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.ProtocolManager
+import com.comphenix.protocol.events.PacketContainer
 import com.google.gson.GsonBuilder
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.entity.Husk
 import org.bukkit.entity.LivingEntity
-import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
@@ -14,15 +19,18 @@ import org.bukkit.util.Vector
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.lang.reflect.InvocationTargetException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+
 
 class Loader : JavaPlugin(), Listener {
 
     private val configFile = File(dataFolder, "config.json")
     private val gson = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create()
-    private val visiblePlayerMap: ConcurrentHashMap<UUID, Set<UUID>> = ConcurrentHashMap()
+    private val visibleEntityMap: ConcurrentHashMap<UUID, Set<UUID>> = ConcurrentHashMap()
     private val ignoreBlocks = HashSet<Material>()
+    private val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
     override fun onEnable() {
         dataFolder.mkdir()
@@ -38,6 +46,8 @@ class Loader : JavaPlugin(), Listener {
             }
         }
 
+        // TODO packet filter here to prevent updating hidden entity
+
         //setup refresher
         this.server.scheduler.runTaskTimer(this, Runnable {
             val worldEntityMap =
@@ -45,14 +55,14 @@ class Loader : JavaPlugin(), Listener {
                     map[world.name] = world.livingEntities; map
                 }
 
-            for (sourcePlayer in this.server.onlinePlayers) {
-                val visiblePlayers = HashSet<UUID>()
-                for (target in worldEntityMap[sourcePlayer.world.name]!!.iterator()) {
+            for (observer in this.server.onlinePlayers) {
+                val visiblePlayersEntityIDSet = HashSet<UUID>()
+                for (target in worldEntityMap[observer.world.name]!!.iterator()) {
                     //TODO for debug only
-                    if (target !is Zombie)
+                    if (target !is Husk)
                         continue
 
-                    val sourceLocation = sourcePlayer.location.add(EYE)
+                    val sourceLocation = observer.location.add(EYE)
                     val targetPlayerLocation = target.location
                     val targetCorner1 = targetPlayerLocation.clone().add(CORNER1)
                     val targetCorner2 = targetPlayerLocation.clone().add(CORNER2)
@@ -85,17 +95,38 @@ class Loader : JavaPlugin(), Listener {
                             ignoreBlocks
                         )
                     )
-                        visiblePlayers.add(target.uniqueId)
+                        visiblePlayersEntityIDSet.add(target.uniqueId)
 
                 }
-                // TODO("send differential packets here")
                 val differential =
-                    differential(visiblePlayerMap.getOrDefault(sourcePlayer.uniqueId, HashSet()), visiblePlayers)
+                    differential(
+                        visibleEntityMap.getOrDefault(observer.uniqueId, HashSet()),
+                        visiblePlayersEntityIDSet
+                    )
+
+                // send destroy packet here
+                val destroyEntityPacket = PacketContainer(ENTITY_DESTROY)
+                destroyEntityPacket.integerArrays.write(
+                    0, differential.first.map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
+                )
+                try {
+                    protocolManager.sendServerPacket(observer, destroyEntityPacket)
+                } catch (e: InvocationTargetException) {
+                    e.printStackTrace()
+                }
+
+                // send update packet here
+                for (newUUID in differential.second) {
+                    protocolManager.updateEntity(Bukkit.getEntity(newUUID)!!, listOf(observer))
+                    // TODO for debug only
+                    observer.sendMessage(Bukkit.getEntity(newUUID).toString())
+                }
+
                 if (differential.first.isNotEmpty())
-                    sourcePlayer.sendMessage("${differential.first} left your sight.")
+                    observer.sendMessage("${differential.first} left your sight.")
                 if (differential.second.isNotEmpty())
-                    sourcePlayer.sendMessage("${differential.second} entered your sight.")
-                visiblePlayerMap[sourcePlayer.uniqueId] = visiblePlayers
+                    observer.sendMessage("${differential.second} entered your sight.")
+                visibleEntityMap[observer.uniqueId] = visiblePlayersEntityIDSet
             }
         }, 0L, 1L)
     }
@@ -149,14 +180,14 @@ class Loader : JavaPlugin(), Listener {
 
     @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        visiblePlayerMap.remove(event.player.uniqueId)
+        visibleEntityMap.remove(event.player.uniqueId)
     }
 
     companion object {
         private val EYE = Vector(0.0, 1.62, 0.0)
-        private val CORNER1 = Vector(0.5, 0.1, 0.5)
-        private val CORNER2 = Vector(-0.5, 0.1, -0.5)
-        private val CORNER3 = Vector(0.5, 2.0, -0.5)
-        private val CORNER4 = Vector(-0.5, 2.0, 0.5)
+        private val CORNER1 = Vector(0.4, 0.1, 0.4)
+        private val CORNER2 = Vector(-0.4, 0.6, 0.4)
+        private val CORNER3 = Vector(-0.4, 1.1, -0.4)
+        private val CORNER4 = Vector(0.4, 1.8, -0.4)
     }
 }
