@@ -23,6 +23,9 @@ data class Config(
     @SerializedName("ignorePassableBlocks")
     val ignorePassableBlocks: Boolean = true,
     @Expose
+    @SerializedName("ignoreLiquidBlocks")
+    val ignoreLiquidBlocks: Boolean = true,
+    @Expose
     @SerializedName("ignoreBlocks")
     val ignoreBlocks: List<String> = mutableListOf(
         "OAK_LEAVES",

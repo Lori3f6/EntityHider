@@ -75,25 +75,25 @@ class Loader : JavaPlugin(), Listener {
                             sourceLocation,
                             targetCorner1,
                             config.maxViewDistance,
-                            config.ignorePassableBlocks,
+                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner2,
                             config.maxViewDistance,
-                            config.ignorePassableBlocks,
+                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner3,
                             config.maxViewDistance,
-                            config.ignorePassableBlocks,
+                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner4,
                             config.maxViewDistance,
-                            config.ignorePassableBlocks,
+                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         )
                     )
@@ -165,13 +165,14 @@ class Loader : JavaPlugin(), Listener {
         targetLocation: Location,
         maxVisibleDistance: Int,
         ignorePassableBlock: Boolean,
+        ignoreLiquidBlocks: Boolean,
         ignoredBlocks: Set<Material>
     ): Boolean {
 
         val distance = sourceLocation.distance(targetLocation)
         if (distance > maxVisibleDistance)
             return false
-        else if(distance < 1)
+        else if (distance < 1)
             return true
 
         val blockIterator = BlockIterator(
@@ -187,7 +188,7 @@ class Loader : JavaPlugin(), Listener {
         )
 
         for (block in blockIterator) {
-            if (block.isEmpty || (ignorePassableBlock && block.isPassable) || block.type in ignoredBlocks)
+            if (block.isEmpty || (ignorePassableBlock && block.isPassable) || (ignoreLiquidBlocks && block.isLiquid) || block.type in ignoredBlocks)
                 continue
             else
                 return false
