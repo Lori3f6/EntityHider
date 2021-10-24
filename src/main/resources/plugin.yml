@@ -3,5 +3,6 @@ version: ${project.Version}
 main: land.melon.lab.entityhider.Loader
 api-version: 1.16
 author: langua
-depend: [ ProtocolLib ]
+depend:
+  - ProtocolLib
 

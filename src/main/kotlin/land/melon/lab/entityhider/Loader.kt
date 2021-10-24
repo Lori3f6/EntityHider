@@ -32,7 +32,6 @@ class Loader : JavaPlugin(), Listener {
     private val gson = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create()
     private val visibleEntityMap: ConcurrentHashMap<UUID, Set<UUID>> = ConcurrentHashMap()
     private val ignoreBlocks = HashSet<Material>()
-    private val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
     override fun onEnable() {
         dataFolder.mkdir()
@@ -48,7 +47,31 @@ class Loader : JavaPlugin(), Listener {
             }
         }
 
-        // TODO packet filter here to prevent updating hidden entity
+        //setup protocol manager
+        val protocolManager = ProtocolLibrary.getProtocolManager()
+
+        // packet filter to prevent updating hidden entity
+        protocolManager.addPacketListener(
+            object : PacketAdapter(this, ListenerPriority.NORMAL, ENTITY_METADATA, ENTITY_VELOCITY, ENTITY_SOUND) {
+                override fun onPacketSending(event: PacketEvent?) {
+                    when (event?.packet?.type) {
+                        ENTITY_METADATA,
+                        ENTITY_VELOCITY -> {
+                            event!!.isCancelled = event.packet.integers.values[0] !in visibleEntityMap.getOrDefault(
+                                event.player.uniqueId,
+                                HashSet()
+                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
+                        }
+                        ENTITY_SOUND -> {
+                            event!!.isCancelled = event.packet.integers.values[2] !in visibleEntityMap.getOrDefault(
+                                event.player.uniqueId,
+                                HashSet()
+                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
+                        }
+                    }
+                }
+            }
+        )
 
         //setup refresher
         this.server.scheduler.runTaskTimer(this, Runnable {
@@ -131,28 +154,6 @@ class Loader : JavaPlugin(), Listener {
                 visibleEntityMap[observer.uniqueId] = visiblePlayersEntityIDSet
             }
         }, 0L, 1L)
-
-        protocolManager.addPacketListener(
-            object : PacketAdapter(this, ListenerPriority.NORMAL, ENTITY_METADATA, ENTITY_VELOCITY, ENTITY_SOUND) {
-                override fun onPacketSending(event: PacketEvent?) {
-                    when (event?.packet?.type) {
-                        ENTITY_METADATA,
-                        ENTITY_VELOCITY -> {
-                            event!!.isCancelled = event.packet.integers.values[0] !in visibleEntityMap.getOrDefault(
-                                event.player.uniqueId,
-                                HashSet()
-                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
-                        }
-                        ENTITY_SOUND -> {
-                            event!!.isCancelled = event.packet.integers.values[2] !in visibleEntityMap.getOrDefault(
-                                event.player.uniqueId,
-                                HashSet()
-                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
-                        }
-                    }
-                }
-            }
-        )
 
     }
 
