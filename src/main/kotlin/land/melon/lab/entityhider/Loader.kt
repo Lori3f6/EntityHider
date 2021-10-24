@@ -131,6 +131,29 @@ class Loader : JavaPlugin(), Listener {
                 visibleEntityMap[observer.uniqueId] = visiblePlayersEntityIDSet
             }
         }, 0L, 1L)
+
+        protocolManager.addPacketListener(
+            object : PacketAdapter(this, ListenerPriority.NORMAL, ENTITY_METADATA, ENTITY_VELOCITY, ENTITY_SOUND) {
+                override fun onPacketSending(event: PacketEvent?) {
+                    when (event?.packet?.type) {
+                        ENTITY_METADATA,
+                        ENTITY_VELOCITY -> {
+                            event!!.isCancelled = event.packet.integers.values[0] !in visibleEntityMap.getOrDefault(
+                                event.player.uniqueId,
+                                HashSet()
+                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
+                        }
+                        ENTITY_SOUND -> {
+                            event!!.isCancelled = event.packet.integers.values[2] !in visibleEntityMap.getOrDefault(
+                                event.player.uniqueId,
+                                HashSet()
+                            ).map { uuid -> Bukkit.getEntity(uuid)!!.entityId }
+                        }
+                    }
+                }
+            }
+        )
+
     }
 
     private fun <T> differential(originalSet: Set<T>, newSet: Set<T>): Pair<Set<T>, Set<T>> {
