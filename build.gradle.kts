@@ -15,6 +15,7 @@ configure<SourceSetContainer> {
 
 group = "land.melon.lab"
 version = "0.1"
+val spigotAPIVersion = "1.16.5-R0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -26,7 +27,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
-    api("org.spigotmc:spigot-api:1.17-R0.1-SNAPSHOT")
+    api("org.spigotmc:spigot-api:${spigotAPIVersion}")
     api("com.comphenix.protocol:ProtocolLib:4.7.0")
 }
 
@@ -35,11 +36,11 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<ShadowJar>{
-    archiveFileName.set("$name-${archiveVersion.get()}-shaded.jar")
+    archiveFileName.set("EntityHider-${archiveVersion.get()}-${spigotAPIVersion}.jar")
     minimize()
 
     dependencies {
-        exclude(dependency("org.spigotmc:spigot-api:1.16-R0.1-SNAPSHOT") )
+        exclude(dependency("org.spigotmc:spigot-api:${spigotAPIVersion}") )
         exclude(dependency("com.comphenix.protocol:ProtocolLib:4.7.0"))
     }
 }
