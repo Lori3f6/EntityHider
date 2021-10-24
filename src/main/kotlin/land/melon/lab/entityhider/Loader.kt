@@ -1,9 +1,12 @@
 package land.melon.lab.entityhider
 
-import com.comphenix.protocol.PacketType.Play.Server.ENTITY_DESTROY
+import com.comphenix.protocol.PacketType.Play.Server.*
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
+import com.comphenix.protocol.events.ListenerPriority
+import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.events.PacketEvent
 import com.google.gson.GsonBuilder
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -25,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 
 class Loader : JavaPlugin(), Listener {
-
     private val configFile = File(dataFolder, "config.json")
     private val gson = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create()
     private val visibleEntityMap: ConcurrentHashMap<UUID, Set<UUID>> = ConcurrentHashMap()
@@ -143,8 +145,11 @@ class Loader : JavaPlugin(), Listener {
         ignoredBlocks: Set<Material>
     ): Boolean {
 
-        if (sourceLocation.distance(targetLocation) > maxVisibleDistance)
+        val distance = sourceLocation.distance(targetLocation)
+        if (distance > maxVisibleDistance)
             return false
+        else if(distance < 1)
+            return true
 
         val blockIterator = BlockIterator(
             sourceLocation.world!!,
@@ -187,7 +192,7 @@ class Loader : JavaPlugin(), Listener {
         private val EYE = Vector(0.0, 1.62, 0.0)
         private val CORNER1 = Vector(0.4, 0.1, 0.4)
         private val CORNER2 = Vector(-0.4, 0.6, 0.4)
-        private val CORNER3 = Vector(-0.4, 1.1, -0.4)
-        private val CORNER4 = Vector(0.4, 1.8, -0.4)
+        private val CORNER3 = Vector(-0.4, 1.2, -0.4)
+        private val CORNER4 = Vector(0.4, 1.9, -0.4)
     }
 }
