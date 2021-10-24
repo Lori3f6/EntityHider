@@ -2,7 +2,6 @@ package land.melon.lab.entityhider
 
 import com.comphenix.protocol.PacketType.Play.Server.*
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.ProtocolManager
 import com.comphenix.protocol.events.ListenerPriority
 import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketContainer
@@ -11,8 +10,7 @@ import com.google.gson.GsonBuilder
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.entity.Husk
-import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
@@ -42,7 +40,7 @@ class Loader : JavaPlugin(), Listener {
         for (blockName in config.ignoreBlocks) {
             try {
                 ignoreBlocks.add(Material.valueOf(blockName))
-            } catch (e: IllegalArgumentException) {
+            } catch (exception: IllegalArgumentException) {
                 this.logger.warning("$blockName is not a legal material name in this version of bukkit(case sensitive). Please make sure that you are using the corresponding bukkit version.")
             }
         }
@@ -76,17 +74,13 @@ class Loader : JavaPlugin(), Listener {
         //setup refresher
         this.server.scheduler.runTaskTimer(this, Runnable {
             val worldEntityMap =
-                server.worlds.fold(HashMap<String, List<LivingEntity>>()) { map, world ->
-                    map[world.name] = world.livingEntities; map
+                server.worlds.fold(HashMap<String, List<Player>>()) { map, world ->
+                    map[world.name] = world.players; map
                 }
 
             for (observer in this.server.onlinePlayers) {
                 val visiblePlayersEntityIDSet = HashSet<UUID>()
                 for (target in worldEntityMap[observer.world.name]!!.iterator()) {
-                    //TODO for debug only
-                    if (target !is Husk)
-                        continue
-
                     val sourceLocation = observer.location.add(EYE)
                     val targetPlayerLocation = target.location
                     val targetCorner1 = targetPlayerLocation.clone().add(CORNER1)
@@ -132,7 +126,9 @@ class Loader : JavaPlugin(), Listener {
                 // send destroy packet here
                 val destroyEntityPacket = PacketContainer(ENTITY_DESTROY)
                 destroyEntityPacket.integerArrays.write(
-                    0, differential.first.filter { uuid -> Bukkit.getEntity(uuid) != null }.map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
+                    0,
+                    differential.first.filter { uuid -> Bukkit.getEntity(uuid) != null }
+                        .map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
                 )
                 try {
                     protocolManager.sendServerPacket(observer, destroyEntityPacket)
@@ -143,8 +139,6 @@ class Loader : JavaPlugin(), Listener {
                 // send update packet here
                 for (newUUID in differential.second) {
                     protocolManager.updateEntity(Bukkit.getEntity(newUUID)!!, listOf(observer))
-                    // TODO for debug only
-                    observer.sendMessage(Bukkit.getEntity(newUUID).toString())
                 }
 
                 if (differential.first.isNotEmpty())

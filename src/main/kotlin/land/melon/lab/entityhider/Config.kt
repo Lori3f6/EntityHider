@@ -31,7 +31,6 @@ data class Config(
         "LECTERN",
         "HOPPER",
         "DAYLIGHT_DETECTOR",
-        "CHEST",
         "FARMLAND",
         "CHORUS_PLANT",
         "CHORUS_FLOWER",
@@ -142,6 +141,7 @@ data class Config(
         "POLISHED_BLACKSTONE_STAIRS",
         "POLISHED_BLACKSTONE_BRICK_STAIRS",
 
+        "CHEST",
         "TRAPPED_CHEST",
         "OAK_LEAVES",
         "SPRUCE_LEAVES",
