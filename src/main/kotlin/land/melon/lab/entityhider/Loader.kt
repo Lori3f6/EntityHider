@@ -109,7 +109,7 @@ class Loader : JavaPlugin(), Listener {
                 // send destroy packet here
                 val destroyEntityPacket = PacketContainer(ENTITY_DESTROY)
                 destroyEntityPacket.integerArrays.write(
-                    0, differential.first.map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
+                    0, differential.first.filter { uuid -> Bukkit.getEntity(uuid) != null }.map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
                 )
                 try {
                     protocolManager.sendServerPacket(observer, destroyEntityPacket)
