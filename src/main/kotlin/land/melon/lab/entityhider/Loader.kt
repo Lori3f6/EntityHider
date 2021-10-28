@@ -91,25 +91,25 @@ class Loader : JavaPlugin(), Listener {
                     if (isVisible(
                             sourceLocation,
                             targetCorner1,
-                            config.maxViewDistance,
+                            config.maxViewDistance,config.exposureDistance,
                             config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner2,
-                            config.maxViewDistance,
+                            config.maxViewDistance,config.exposureDistance,
                             config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner3,
-                            config.maxViewDistance,
+                            config.maxViewDistance,config.exposureDistance,
                             config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         ) || isVisible(
                             sourceLocation,
                             targetCorner4,
-                            config.maxViewDistance,
+                            config.maxViewDistance,config.exposureDistance,
                             config.ignorePassableBlocks, config.ignoreLiquidBlocks,
                             ignoreBlocks
                         )
@@ -158,17 +158,21 @@ class Loader : JavaPlugin(), Listener {
     private fun isVisible(
         sourceLocation: Location,
         targetLocation: Location,
-        maxVisibleDistance: Int,
+        maxVisibleDistance: Double,
+        exposureDistance:Double,
         ignorePassableBlock: Boolean,
         ignoreLiquidBlocks: Boolean,
         ignoredBlocks: Set<Material>
     ): Boolean {
 
         val distance = sourceLocation.distance(targetLocation)
-        if (distance > maxVisibleDistance)
-            return false
-        else if (distance < 1)
+
+        if (distance < 1)
             return true
+        else if(distance < exposureDistance)
+            return true
+        else if(distance > maxVisibleDistance)
+            return false
 
         val blockIterator = BlockIterator(
             sourceLocation.world!!,

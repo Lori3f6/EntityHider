@@ -9,7 +9,10 @@ data class Config(
     val sightTracerThreadsAmount: Int = Runtime.getRuntime().availableProcessors(),
     @Expose
     @SerializedName("maxViewDistance")
-    val maxViewDistance: Int = 64,
+    val maxViewDistance: Double = 64.0,
+    @Expose
+    @SerializedName("ExposureDistance")
+    val exposureDistance: Double = 6.0,
     @Expose
     @SerializedName("frontViewAngle")
     val frontViewAngle: Double = 90.0,
