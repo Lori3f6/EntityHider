@@ -1,8 +1,10 @@
 name: EntityHider
 version: ${project.Version}
 main: land.melon.lab.entityhider.Loader
-api-version: 1.16
+api-version: 1.18
 author: langua
 depend:
   - ProtocolLib
+libraries:
+  - "org.jetbrains.kotlin:kotlin-stdlib:1.6.21"
 

@@ -13,12 +13,12 @@ data class Config(
     @Expose
     @SerializedName("ExposureDistance")
     val exposureDistance: Double = 6.0,
-    @Expose
-    @SerializedName("frontViewAngle")
-    val frontViewAngle: Double = 90.0,
-    @Expose
-    @SerializedName("backViewAngle")
-    val backViewAngle: Double = 90.0,
+//    @Expose
+//    @SerializedName("frontViewAngle")
+//    val frontViewAngle: Double = 135.0,
+//    @Expose
+//    @SerializedName("backViewAngle")
+//    val backViewAngle: Double = 135.0,
     @Expose
     @SerializedName("pitchViewAngle")
     val pitchViewAngle: Double = 90.0,

@@ -81,12 +81,12 @@ class Loader : JavaPlugin(), Listener {
             for (observer in this.server.onlinePlayers) {
                 val visiblePlayersEntityIDSet = HashSet<UUID>()
                 for (target in worldEntityMap[observer.world.name]!!.iterator()) {
-                    val sourceLocation = observer.location.add(EYE)
+                    val sourceLocation = observer.location.add(if(observer.isSneaking) SNEAK_EYE else STAND_EYE)
                     val targetPlayerLocation = target.location
                     val targetCorner1 = targetPlayerLocation.clone().add(CORNER1)
                     val targetCorner2 = targetPlayerLocation.clone().add(CORNER2)
                     val targetCorner3 = targetPlayerLocation.clone().add(CORNER3)
-                    val targetCorner4 = targetPlayerLocation.clone().add(CORNER4)
+                    val targetCorner4 = targetPlayerLocation.clone().add(if(target.isSneaking) CORNER4_SNEAK else CORNER4_STAND)
 
                     if (isVisible(
                             sourceLocation,
@@ -125,10 +125,10 @@ class Loader : JavaPlugin(), Listener {
 
                 // send destroy packet here
                 val destroyEntityPacket = PacketContainer(ENTITY_DESTROY)
-                destroyEntityPacket.integerArrays.write(
+                destroyEntityPacket.intLists.write(
                     0,
                     differential.first.filter { uuid -> Bukkit.getEntity(uuid) != null }
-                        .map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toIntArray()
+                        .map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toList()
                 )
                 try {
                     protocolManager.sendServerPacket(observer, destroyEntityPacket)
@@ -141,10 +141,10 @@ class Loader : JavaPlugin(), Listener {
                     protocolManager.updateEntity(Bukkit.getEntity(newUUID)!!, listOf(observer))
                 }
 
-                if (differential.first.isNotEmpty())
-                    observer.sendMessage("${differential.first} left your sight.")
-                if (differential.second.isNotEmpty())
-                    observer.sendMessage("${differential.second} entered your sight.")
+//                if (differential.first.isNotEmpty())
+//                    observer.sendMessage("${differential.first} left your sight.")
+//                if (differential.second.isNotEmpty())
+//                    observer.sendMessage("${differential.second} entered your sight.")
                 visibleEntityMap[observer.uniqueId] = visiblePlayersEntityIDSet
             }
         }, 0L, 1L)
@@ -212,10 +212,12 @@ class Loader : JavaPlugin(), Listener {
     }
 
     companion object {
-        private val EYE = Vector(0.0, 1.62, 0.0)
+        private val STAND_EYE = Vector(0.0, 1.62, 0.0)
+        private val SNEAK_EYE = Vector(0.0,1.27,0.0)
         private val CORNER1 = Vector(0.4, 0.1, 0.4)
         private val CORNER2 = Vector(-0.4, 0.6, 0.4)
         private val CORNER3 = Vector(-0.4, 1.2, -0.4)
-        private val CORNER4 = Vector(0.4, 1.9, -0.4)
+        private val CORNER4_SNEAK = Vector(0.4, 1.65, -0.4)
+        private val CORNER4_STAND = Vector(0.4, 1.8, -0.4)
     }
 }
