@@ -8,6 +8,7 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.google.gson.GsonBuilder
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -81,41 +82,8 @@ class Loader : JavaPlugin(), Listener {
             for (observer in this.server.onlinePlayers) {
                 val visiblePlayersEntityIDSet = HashSet<UUID>()
                 for (target in worldEntityMap[observer.world.name]!!.iterator()) {
-                    val sourceLocation = observer.location.add(if(observer.isSneaking) SNEAK_EYE else STAND_EYE)
-                    val targetPlayerLocation = target.location
-                    val targetCorner1 = targetPlayerLocation.clone().add(CORNER1)
-                    val targetCorner2 = targetPlayerLocation.clone().add(CORNER2)
-                    val targetCorner3 = targetPlayerLocation.clone().add(CORNER3)
-                    val targetCorner4 = targetPlayerLocation.clone().add(if(target.isSneaking) CORNER4_SNEAK else CORNER4_STAND)
-
-                    if (isVisible(
-                            sourceLocation,
-                            targetCorner1,
-                            config.maxViewDistance,config.exposureDistance,
-                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
-                            ignoreBlocks
-                        ) || isVisible(
-                            sourceLocation,
-                            targetCorner2,
-                            config.maxViewDistance,config.exposureDistance,
-                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
-                            ignoreBlocks
-                        ) || isVisible(
-                            sourceLocation,
-                            targetCorner3,
-                            config.maxViewDistance,config.exposureDistance,
-                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
-                            ignoreBlocks
-                        ) || isVisible(
-                            sourceLocation,
-                            targetCorner4,
-                            config.maxViewDistance,config.exposureDistance,
-                            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
-                            ignoreBlocks
-                        )
-                    )
+                    if (canSeePlayer(observer, target, config))
                         visiblePlayersEntityIDSet.add(target.uniqueId)
-
                 }
                 val differential =
                     differential(
@@ -127,8 +95,7 @@ class Loader : JavaPlugin(), Listener {
                 val destroyEntityPacket = PacketContainer(ENTITY_DESTROY)
                 destroyEntityPacket.intLists.write(
                     0,
-                    differential.first.filter { uuid -> Bukkit.getEntity(uuid) != null }
-                        .map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toList()
+                    differential.first.map { uuid -> Bukkit.getEntity(uuid)!!.entityId }.toList()
                 )
                 try {
                     protocolManager.sendServerPacket(observer, destroyEntityPacket)
@@ -141,25 +108,64 @@ class Loader : JavaPlugin(), Listener {
                     protocolManager.updateEntity(Bukkit.getEntity(newUUID)!!, listOf(observer))
                 }
 
-//                if (differential.first.isNotEmpty())
-//                    observer.sendMessage("${differential.first} left your sight.")
-//                if (differential.second.isNotEmpty())
-//                    observer.sendMessage("${differential.second} entered your sight.")
                 visibleEntityMap[observer.uniqueId] = visiblePlayersEntityIDSet
             }
         }, 0L, 1L)
 
     }
 
+    private fun canSeePlayer(observer: Player, target: Player, config: Config): Boolean {
+        when (observer.gameMode) {
+            GameMode.CREATIVE, GameMode.SPECTATOR -> return true
+        }
+        val obsTeam = observer.scoreboard.getPlayerTeam(observer)
+        val targetTeam = target.scoreboard.getPlayerTeam(target)
+        if (config.alwaysShowTeammates && obsTeam == targetTeam)
+            return true
+
+        val sourceLocation = observer.location.add(if (observer.isSneaking) SNEAK_EYE else STAND_EYE)
+        val targetPlayerLocation = target.location
+        val targetCorner1 = targetPlayerLocation.clone().add(CORNER1)
+        val targetCorner2 = targetPlayerLocation.clone().add(CORNER2)
+        val targetCorner3 = targetPlayerLocation.clone().add(CORNER3)
+        val targetCorner4 = targetPlayerLocation.clone().add(if (target.isSneaking) CORNER4_SNEAK else CORNER4_STAND)
+
+        return canSeePoint(
+            sourceLocation,
+            targetCorner1,
+            config.maxViewDistance, config.exposureDistance,
+            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
+            ignoreBlocks
+        ) || canSeePoint(
+            sourceLocation,
+            targetCorner2,
+            config.maxViewDistance, config.exposureDistance,
+            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
+            ignoreBlocks
+        ) || canSeePoint(
+            sourceLocation,
+            targetCorner3,
+            config.maxViewDistance, config.exposureDistance,
+            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
+            ignoreBlocks
+        ) || canSeePoint(
+            sourceLocation,
+            targetCorner4,
+            config.maxViewDistance, config.exposureDistance,
+            config.ignorePassableBlocks, config.ignoreLiquidBlocks,
+            ignoreBlocks
+        )
+    }
+
     private fun <T> differential(originalSet: Set<T>, newSet: Set<T>): Pair<Set<T>, Set<T>> {
         return Pair(originalSet subtract newSet, newSet subtract originalSet)
     }
 
-    private fun isVisible(
+    private fun canSeePoint(
         sourceLocation: Location,
         targetLocation: Location,
         maxVisibleDistance: Double,
-        exposureDistance:Double,
+        exposureDistance: Double,
         ignorePassableBlock: Boolean,
         ignoreLiquidBlocks: Boolean,
         ignoredBlocks: Set<Material>

@@ -9,25 +9,19 @@ data class Config(
     val sightTracerThreadsAmount: Int = Runtime.getRuntime().availableProcessors(),
     @Expose
     @SerializedName("maxViewDistance")
-    val maxViewDistance: Double = 64.0,
+    val maxViewDistance: Double = 96.0,
     @Expose
     @SerializedName("ExposureDistance")
-    val exposureDistance: Double = 6.0,
-//    @Expose
-//    @SerializedName("frontViewAngle")
-//    val frontViewAngle: Double = 135.0,
-//    @Expose
-//    @SerializedName("backViewAngle")
-//    val backViewAngle: Double = 135.0,
-    @Expose
-    @SerializedName("pitchViewAngle")
-    val pitchViewAngle: Double = 90.0,
+    val exposureDistance: Double = 16.0,
     @Expose
     @SerializedName("ignorePassableBlocks")
     val ignorePassableBlocks: Boolean = true,
     @Expose
     @SerializedName("ignoreLiquidBlocks")
     val ignoreLiquidBlocks: Boolean = true,
+    @Expose
+    @SerializedName("alwaysShowTeammates")
+    val alwaysShowTeammates: Boolean = true,
     @Expose
     @SerializedName("ignoreBlocks")
     val ignoreBlocks: List<String> = mutableListOf(

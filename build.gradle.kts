@@ -14,7 +14,7 @@ configure<SourceSetContainer> {
 
 group = "land.melon.lab"
 version = "0.1"
-val spigotAPIVersion = "1.18.1-R0.1-SNAPSHOT"
+val spigotAPIVersion = "1.18.2-R0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.21")
     api("org.spigotmc:spigot-api:${spigotAPIVersion}")
     api("com.comphenix.protocol:ProtocolLib:4.8.0")
 }
