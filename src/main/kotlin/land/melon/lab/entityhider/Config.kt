@@ -23,6 +23,12 @@ data class Config(
     @SerializedName("alwaysShowTeammates")
     val alwaysShowTeammates: Boolean = true,
     @Expose
+    @SerializedName("StrictMode")
+    val strictMode: Boolean = false,
+    @Expose
+    @SerializedName("absoluteInvisibility")
+    val absoluteInvisibility: Boolean = false,
+    @Expose
     @SerializedName("ignoreBlocks")
     val ignoreBlocks: List<String> = mutableListOf(
         "LECTERN",
